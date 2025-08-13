@@ -1,0 +1,33 @@
+-- =====================
+-- Claims_History Measures
+-- =====================
+Total Claims = COUNTROWS(Claims_History)
+
+Total Approved = CALCULATE(COUNTROWS(Claims_History), Claims_History[Status] = "Approved")
+
+Total Denied = CALCULATE(COUNTROWS(Claims_History), Claims_History[Status] = "Denied")
+
+Denial Rate % = DIVIDE([Total Denied], [Total Claims], 0)
+
+Average Processing Days = AVERAGE(Claims_History[Processing_Days])
+
+Total Claim Amount = SUM(Claims_History[Claim_Amount])
+
+Approval Amount % = DIVIDE(SUM(Claims_History[Approved_Amount]), SUM(Claims_History[Claim_Amount]), 0)
+
+-- =====================
+-- Claims_New Risk Logic
+-- =====================
+Risk Score =
+VAR HighAmount = IF(Claims_New[Claim_Amount] > 10000, 1, 0)
+VAR ProviderRisk = IF(Claims_New[Provider] IN {"ProviderX", "ProviderY"}, 1, 0)
+VAR ClaimTypeRisk = IF(Claims_New[Claim_Type] = "Special Surgery", 1, 0)
+RETURN HighAmount + ProviderRisk + ClaimTypeRisk
+
+Risk Category =
+SWITCH(
+    TRUE(),
+    [Risk Score] >= 2, "High Risk",
+    [Risk Score] = 1, "Medium Risk",
+    "Low Risk"
+)
